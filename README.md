@@ -37,6 +37,6 @@ docker compose ps
 
 ## Documentación
 
-- [REQUIREMENTS.md](./REQUIREMENTS.md) — requerimientos funcionales y no funcionales, modelo de datos preliminar
+- [REQUIREMENTS.md](./Requirements.md) — requerimientos funcionales y no funcionales, modelo de datos preliminar
 
 
