@@ -1,0 +1,115 @@
+version: "3.9"
+
+# ManCast — docker-compose base (Fase 0)
+#
+# En esta fase solo levantamos las bases de datos para verificar que el
+# entorno funciona. Los servicios de aplicación (laravel-app, dotnet-api,
+# angular-app) están comentados abajo: los iremos activando conforme
+# avancemos en las Fases 1, 2 y 3, cuando cada repo ya tenga su Dockerfile.
+#
+# Uso:
+#   docker compose up -d        -> levanta en segundo plano
+#   docker compose ps           -> ver estado de los contenedores
+#   docker compose logs -f      -> ver logs en vivo
+#   docker compose down         -> apagar todo
+#   docker compose down -v      -> apagar y borrar también los volúmenes (datos)
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: mancast_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: mancast_laravel
+      MYSQL_USER: mancast
+      MYSQL_PASSWORD: mancast_secret
+      MYSQL_ROOT_PASSWORD: root_secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mancast_mysql_data:/var/lib/mysql
+    networks:
+      - mancast_network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mancast_sqlserver
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "ManCast_Secret123"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mancast_sqlserver_data:/var/opt/mssql
+    networks:
+      - mancast_network
+
+  # ---------------------------------------------------------------------
+  # A partir de la Fase 1, descomenta este bloque (necesitas el
+  # Dockerfile dentro de mancast-laravel-api primero).
+  # ---------------------------------------------------------------------
+  # laravel-app:
+  #   build:
+  #     context: ../mancast-laravel-api
+  #     dockerfile: Dockerfile
+  #   container_name: mancast_laravel
+  #   restart: unless-stopped
+  #   environment:
+  #     DB_HOST: mysql
+  #     DB_DATABASE: mancast_laravel
+  #     DB_USERNAME: mancast
+  #     DB_PASSWORD: mancast_secret
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - mysql
+  #   networks:
+  #     - mancast_network
+
+  # ---------------------------------------------------------------------
+  # A partir de la Fase 3, descomenta este bloque (necesitas el
+  # Dockerfile dentro de mancast-dotnet-api primero).
+  # ---------------------------------------------------------------------
+  # dotnet-api:
+  #   build:
+  #     context: ../mancast-dotnet-api
+  #     dockerfile: Dockerfile
+  #   container_name: mancast_dotnet
+  #   restart: unless-stopped
+  #   environment:
+  #     ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=ManCastTransfers;User=sa;Password=ManCast_Secret123;TrustServerCertificate=True"
+  #     LaravelApi__BaseUrl: "http://laravel-app:8000"
+  #   ports:
+  #     - "5000:5000"
+  #   depends_on:
+  #     - sqlserver
+  #   networks:
+  #     - mancast_network
+
+  # ---------------------------------------------------------------------
+  # A partir de la Fase 2, descomenta este bloque (necesitas el
+  # Dockerfile dentro de mancast-angular primero).
+  # ---------------------------------------------------------------------
+  # angular-app:
+  #   build:
+  #     context: ../mancast-angular
+  #     dockerfile: Dockerfile
+  #   container_name: mancast_angular
+  #   restart: unless-stopped
+  #   ports:
+  #     - "4200:80"
+  #   networks:
+  #     - mancast_network
+
+networks:
+  mancast_network:
+    driver: bridge
+
+volumes:
+  mancast_mysql_data:
+  mancast_sqlserver_data:
+
+
